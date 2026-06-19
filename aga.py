@@ -5,10 +5,10 @@ st.set_page_config(page_title="Optimización Telecom", layout="wide")
 
 st.title("📡 Optimización de Red de Telecomunicaciones")
 
-st.write("Modelo de Programación Lineal con múltiples restricciones tecnológicas.")
+st.write("Modelo de programación lineal con costos realistas de infraestructura.")
 
 # -----------------------------
-# INPUTS
+# PARÁMETROS
 # -----------------------------
 
 st.header("📊 Parámetros de dispositivos")
@@ -20,7 +20,7 @@ with col1:
     covA = st.number_input("Cobertura A", value=5)
     capA = st.number_input("Capacidad A", value=40)
     eneA = st.number_input("Energía A", value=10)
-    costA = st.number_input("Costo A", value=4)
+    costA = st.number_input("Costo A (USD)", value=3000)
     manA = st.number_input("Mantenimiento A", value=2)
     confA = st.number_input("Confiabilidad A", value=8)
 
@@ -29,7 +29,7 @@ with col2:
     covB = st.number_input("Cobertura B", value=8)
     capB = st.number_input("Capacidad B", value=70)
     eneB = st.number_input("Energía B", value=20)
-    costB = st.number_input("Costo B", value=6)
+    costB = st.number_input("Costo B (USD)", value=5000)
     manB = st.number_input("Mantenimiento B", value=3)
     confB = st.number_input("Confiabilidad B", value=9)
 
@@ -38,7 +38,7 @@ with col3:
     covD = st.number_input("Cobertura D", value=3)
     capD = st.number_input("Capacidad D", value=30)
     eneD = st.number_input("Energía D", value=15)
-    costD = st.number_input("Costo D", value=5)
+    costD = st.number_input("Costo D (USD)", value=7000)
     manD = st.number_input("Mantenimiento D", value=4)
     confD = st.number_input("Confiabilidad D", value=7)
 
@@ -47,7 +47,7 @@ with col4:
     covM = st.number_input("Cobertura M", value=10)
     capM = st.number_input("Capacidad M", value=90)
     eneM = st.number_input("Energía M", value=25)
-    costM = st.number_input("Costo M", value=8)
+    costM = st.number_input("Costo M (USD)", value=12000)
     manM = st.number_input("Mantenimiento M", value=5)
     confM = st.number_input("Confiabilidad M", value=10)
 
@@ -60,7 +60,7 @@ st.header("⚙️ Restricciones")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    presupuesto = st.number_input("Presupuesto", value=120)
+    presupuesto = st.number_input("Presupuesto (USD)", value=80000)
     energia_max = st.number_input("Energía máxima", value=250)
     mantenimiento_max = st.number_input("Mantenimiento máximo", value=30)
 
@@ -74,7 +74,7 @@ with col3:
     micro_min = st.number_input("Microceldas mínimas", value=1)
 
 # -----------------------------
-# RESOLVER MODELO
+# MODELO
 # -----------------------------
 
 if st.button("🚀 Resolver modelo"):
@@ -82,16 +82,19 @@ if st.button("🚀 Resolver modelo"):
     model = LpProblem("Telecom", LpMaximize)
 
     # VARIABLES
-    x = LpVariable("A", lowBound=0, cat="Integer")
-    y = LpVariable("B", lowBound=0, cat="Integer")
-    z = LpVariable("D", lowBound=0, cat="Integer")
-    w = LpVariable("M", lowBound=0, cat="Integer")
+    x = LpVariable("Antena_A", lowBound=0, cat="Integer")
+    y = LpVariable("Antena_B", lowBound=0, cat="Integer")
+    z = LpVariable("Drone", lowBound=0, cat="Integer")
+    w = LpVariable("Microcelda", lowBound=0, cat="Integer")
 
-    # OBJETIVO (max cobertura)
+    # OBJETIVO
     model += covA*x + covB*y + covD*z + covM*w
 
     # RESTRICCIONES
+
+    # Presupuesto (AHORA REALISTA)
     model += costA*x + costB*y + costD*z + costM*w <= presupuesto
+
     model += eneA*x + eneB*y + eneD*z + eneM*w <= energia_max
     model += manA*x + manB*y + manD*z + manM*w <= mantenimiento_max
     model += x + y + z + w <= max_disp
@@ -125,17 +128,17 @@ if st.button("🚀 Resolver modelo"):
 
         st.subheader("📊 Uso de recursos")
 
-        costo = costA*value(x)+costB*value(y)+costD*value(z)+costM*value(w)
-        energia = eneA*value(x)+eneB*value(y)+eneD*value(z)+eneM*value(w)
-        mant = manA*value(x)+manB*value(y)+manD*value(z)+manM*value(w)
-        cap = capA*value(x)+capB*value(y)+capD*value(z)+capM*value(w)
-        conf = confA*value(x)+confB*value(y)+confD*value(z)+confM*value(w)
+        costo = costA*value(x) + costB*value(y) + costD*value(z) + costM*value(w)
+        energia = eneA*value(x) + eneB*value(y) + eneD*value(z) + eneM*value(w)
+        mant = manA*value(x) + manB*value(y) + manD*value(z) + manM*value(w)
+        cap = capA*value(x) + capB*value(y) + capD*value(z) + capM*value(w)
+        conf = confA*value(x) + confB*value(y) + confD*value(z) + confM*value(w)
 
-        st.write(f"💰 Costo: {costo:.2f} / {presupuesto}")
-        st.write(f"⚡ Energía: {energia:.2f} / {energia_max}")
-        st.write(f"🛠️ Mantenimiento: {mant:.2f} / {mantenimiento_max}")
-        st.write(f"📡 Capacidad: {cap:.2f} (mín {cap_min})")
-        st.write(f"🔒 Confiabilidad: {conf:.2f} (mín {conf_min})")
+        st.write(f"💰 Costo: {costo:.0f} / {presupuesto}")
+        st.write(f"⚡ Energía: {energia:.0f} / {energia_max}")
+        st.write(f"🛠️ Mantenimiento: {mant:.0f} / {mantenimiento_max}")
+        st.write(f"📡 Capacidad: {cap:.0f} (mín {cap_min})")
+        st.write(f"🔒 Confiabilidad: {conf:.0f} (mín {conf_min})")
 
     else:
         st.error("No existe solución factible con estos parámetros")
